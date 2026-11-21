@@ -6,6 +6,15 @@ Static files under `app/` (no build step, works with the network off): checklist
 
 Run: `mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts`
 
+## Features
+
+- **Offline-first** — loads instantly with zero network requests; trophy data lives in `app/data/trophies.json`
+- **Full 55-trophy checklist** — each entry has a detailed guide in our own words, grade badge, missable flag, and source link (PSNProfiles + PowerPyx / GamerGuides)
+- **Smart filters with counts** — filter by kind (Story, Activities, Collectibles, etc.) or grade; dropdown badges show how many trophies each filter holds
+- **Spoiler-safe mode** — hides unearned story trophies with one click; great for first playthroughs
+- **Roadmap to Platinum** — 7-stage progression from Story through 100% Finale, with per-stage progress and inline checkboxes
+- **Progress persistence** — auto-saves to localStorage; export/import JSON to move progress between devices or browsers
+
 [![make.fun · gta6-trophy-guide-01](https://make.fun/badge/gta6-trophy-guide-01.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
 [![rank](https://make.fun/badge/gta6-trophy-guide-01/Aldapratama17/gta6-trophy-guide/rank.svg)](https://make.fun/bounty/gta6-trophy-guide-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
 [![reward](https://make.fun/badge/gta6-trophy-guide-01/Aldapratama17/gta6-trophy-guide/reward.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
