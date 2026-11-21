@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTA VI Trophy Guide & Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>GTA VI Trophy Guide</h1>
+    <span class="subtitle">Offline tracker & roadmap to Platinum</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="55" aria-label="Trophy progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="progress-text" id="progressText">0 of 55 earned</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <label class="filter-group">
+      <span class="filter-label">Filter</span>
+      <select id="filterKind" aria-label="Filter by kind">
+        <option value="all">All trophies</option>
+        <option value="story">Story</option>
+        <option value="missable">Missable</option>
+        <option value="collectibles">Collectibles</option>
+        <option value="activities">Activities</option>
+        <option value="completion">Completion</option>
+      </select>
+    </label>
+    <label class="filter-group">
+      <span class="filter-label">Grade</span>
+      <select id="filterGrade" aria-label="Filter by grade">
+        <option value="all">All grades</option>
+        <option value="platinum">Platinum</option>
+        <option value="gold">Gold</option>
+        <option value="silver">Silver</option>
+        <option value="bronze">Bronze</option>
+      </select>
+    </label>
+    <label class="filter-group search-group">
+      <span class="filter-label">Search</span>
+      <input type="search" id="searchInput" placeholder="Search trophies..." aria-label="Search trophies">
+    </label>
+  </div>
+  <div class="toolbar-right">
+    <label class="spoiler-toggle" id="spoilerToggle">
+      <input type="checkbox" id="spoilerCheckbox">
+      <span class="toggle-slider"></span>
+      <span class="toggle-text">Hide story spoilers</span>
+    </label>
+    <button id="btnExport" class="btn btn-primary" aria-label="Export progress to file">Export Progress</button>
+    <label class="btn btn-secondary import-label">
+      Import Progress
+      <input type="file" id="fileImport" accept="application/json" aria-label="Import progress from file">
+    </label>
+    <button id="btnRoadmap" class="btn btn-outline" aria-label="Show roadmap view">Roadmap</button>
+  </div>
+</div>
+
+<main class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Trophy list">
+    <div class="sidebar-header">
+      <h2>Trophies</h2>
+      <div class="sidebar-stats" id="sidebarStats"></div>
+    </div>
+    <ul class="trophy-list" id="trophyList" role="listbox" aria-label="Trophy checklist"></ul>
+  </aside>
+
+  <section class="detail-panel" id="detailPanel" aria-label="Trophy details">
+    <div class="detail-placeholder" id="detailPlaceholder">
+      <svg class="icon-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6-6 6 6"/><path d="M17 15v3a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-3"/><path d="M5 15h14"/></svg>
+      <p>Select a trophy to view its guide</p>
+    </div>
+    <article class="detail-content" id="detailContent" hidden>
+      <header class="detail-header">
+        <div class="detail-grade" id="detailGrade"></div>
+        <div>
+          <h2 id="detailName"></h2>
+          <p class="detail-description" id="detailDescription"></p>
+        </div>
+      </header>
+      <div class="detail-body">
+        <section class="guide-section">
+          <h3>Guide</h3>
+          <div class="guide-text" id="detailGuide"></div>
+        </section>
+        <section class="meta-section">
+          <h3>Details</h3>
+          <dl class="meta-list" id="detailMeta"></dl>
+        </section>
+      </div>
+      <footer class="detail-footer">
+        <label class="earned-checkbox">
+          <input type="checkbox" id="detailEarned">
+          <span class="checkmark"></span>
+          <span>Mark as earned</span>
+        </label>
+      </footer>
+    </article>
+  </section>
+
+  <section class="roadmap-panel" id="roadmapPanel" hidden aria-label="Roadmap to Platinum">
+    <header class="roadmap-header">
+      <h2>Roadmap to Platinum</h2>
+      <p class="roadmap-subtitle">Recommended order to earn all 55 trophies efficiently</p>
+    </header>
+    <div class="roadmap-stages" id="roadmapStages"></div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <p>Data sourced from <a href="https://psnprofiles.com/trophies/43531-grand-theft-auto-vi" target="_blank" rel="noopener">PSNProfiles</a> and <a href="https://www.powerpyx.com/gta-6-grand-theft-auto-vi-trophy-guide-roadmap/" target="_blank" rel="noopener">PowerPyx</a>. Unofficial fan guide.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
