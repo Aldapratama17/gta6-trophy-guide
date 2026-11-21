@@ -1,30 +1,15 @@
-// A working gta6-trophy-guide-01 entry (Node 22, standard library only): the guide is this directory's app/ folder,
-// plain static files a browser opens at app/index.html (ES modules, CSS, no build step), offline: it loads nothing
-// over the network, and its trophy list and guides are app/data/trophies.json. The program hands it in: it copies app/
-// and screenshots/ from beside this file to /output and writes /output/dossier.json, the summary the judge reads (your
-// screenshots, the first load's files and bytes, and your source), with the vendored make.fun library. Leave
-// vendor/makefun-frontend.ts as it is: the scorer requires dossier.json to be byte for byte what its own copy writes.
-//
-// Only the plumbing, not a winner: a plain checklist of the 55 trophies with a one-line hint each. Write a real guide
-// for every trophy in your own words, a roadmap to the platinum, filters and a spoiler setting in app/, put 3 or 4 PNG
-// or JPEG screenshots of it in screenshots/ (the first by name is the cover; shots.json says which views this
-// starter's were taken of), and run it.
-//
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-
 import { cpSync, existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const scriptDir = fileURLToPath(new URL('.', import.meta.url));
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-mkdirSync(out, { recursive: true });
+mkdirSync(outputDir, { recursive: true });
 
-// Helper to get file size
+const DOSSIER_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MiB
+
 function getFileSize(filePath: string): number {
   try {
     return statSync(filePath).size;
@@ -33,65 +18,83 @@ function getFileSize(filePath: string): number {
   }
 }
 
-// Helper to recursively list files with sizes
-function listFilesWithSizes(dir: string, prefix = ''): Array<{path: string, size: number}> {
+function listFilesRecursively(dir: string, base = ''): Array<{path: string, size: number}> {
   const results: Array<{path: string, size: number}> = [];
   if (!existsSync(dir)) return results;
-  
+
   for (const entry of readdirSync(dir)) {
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);
+    const relativePath = base + entry;
     if (stat.isDirectory()) {
-      results.push(...listFilesWithSizes(fullPath, prefix + entry + '/'));
+      results.push(...listFilesRecursively(fullPath, relativePath + '/'));
     } else {
-      results.push({ path: prefix + entry, size: stat.size });
+      results.push({ path: relativePath, size: stat.size });
     }
   }
   return results;
 }
 
-// Copy app/ and report sizes
-const appSrc = join(here, 'app');
-const appDest = join(out, 'app');
-console.log('📦 Copying app/ to output...');
-cpSync(appSrc, appDest, { recursive: true });
+function copyAndReport(src: string, dest: string, label: string): { count: number; totalBytes: number } {
+  console.log(`📦 Copying ${label} to output...`);
+  cpSync(src, dest, { recursive: true });
 
-const appFiles = listFilesWithSizes(appSrc);
-let appTotalBytes = 0;
-for (const f of appFiles) {
-  const kb = (f.size / 1024).toFixed(1);
-  console.log(`   ${f.path}: ${kb} KiB`);
-  appTotalBytes += f.size;
-}
-console.log(`   → app/ total: ${appFiles.length} files, ${(appTotalBytes / 1024).toFixed(1)} KiB`);
-
-// Copy screenshots/ and report sizes
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-const shotsSrc = join(here, 'screenshots');
-const shotsDest = join(out, 'screenshots');
-if (existsSync(shotsSrc)) {
-  cpSync(shotsSrc, shotsDest, { recursive: true });
-  const shotFiles = listFilesWithSizes(shotsSrc);
-  let shotsTotalBytes = 0;
-  for (const f of shotFiles) {
+  const files = listFilesRecursively(src);
+  let totalBytes = 0;
+  for (const f of files) {
     const kb = (f.size / 1024).toFixed(1);
     console.log(`   ${f.path}: ${kb} KiB`);
-    shotsTotalBytes += f.size;
+    totalBytes += f.size;
   }
-  console.log(`   → screenshots/ total: ${shotFiles.length} files, ${(shotsTotalBytes / 1024).toFixed(1)} KiB`);
+  console.log(`   → ${label} total: ${files.length} files, ${(totalBytes / 1024).toFixed(1)} KiB`);
+  return { count: files.length, totalBytes };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MiB`;
+  return `${(bytes / 1024).toFixed(1)} KiB`;
+}
+
+const appSrc = join(scriptDir, 'app');
+const appDest = join(outputDir, 'app');
+const appResult = copyAndReport(appSrc, appDest, 'app/');
+
+const shotsSrc = join(scriptDir, 'screenshots');
+const shotsDest = join(outputDir, 'screenshots');
+mkdirSync(shotsDest, { recursive: true });
+let shotsResult = { count: 0, totalBytes: 0 };
+if (existsSync(shotsSrc)) {
+  shotsResult = copyAndReport(shotsSrc, shotsDest, 'screenshots/');
 } else {
   console.log('   → screenshots/ not found (skipped)');
 }
 
-// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
-// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files and directories in app/ or
-// 48 MiB of app files: app/ counts beside /output's own 1000-entry cap, its screenshots/ and dossier.json).
 console.log('📝 Building dossier.json...');
 writeFileSync(
-  join(out, 'dossier.json'),
-  buildDossier(out, { text_max_bytes: 163840, screenshots: { max: 4, max_bytes: 262144 }, app_max_files: 993, app_max_bytes: 50331648 }),
+  join(outputDir, 'dossier.json'),
+  buildDossier(outputDir, {
+    text_max_bytes: 163840,
+    screenshots: { max: 4, max_bytes: 262144 },
+    app_max_files: 993,
+    app_max_bytes: 50331648,
+  }),
 );
 
-const dossierSize = getFileSize(join(out, 'dossier.json'));
-console.log(`   → dossier.json: ${(dossierSize / 1024).toFixed(1)} KiB`);
+const dossierSize = getFileSize(join(outputDir, 'dossier.json'));
+console.log(`   → dossier.json: ${formatBytes(dossierSize)}`);
+
+// Size guard
+if (dossierSize > DOSSIER_MAX_SIZE) {
+  console.warn(`⚠️  Warning: dossier.json (${formatBytes(dossierSize)}) exceeds ${formatBytes(DOSSIER_MAX_SIZE)} limit!`);
+  process.exit(1);
+}
+
+// Summary
+const totalFiles = appResult.count + shotsResult.count + 1; // +1 for dossier.json
+const totalBytes = appResult.totalBytes + shotsResult.totalBytes + dossierSize;
+console.log('');
+console.log('📊 Build Summary:');
+console.log(`   Total files: ${totalFiles}`);
+console.log(`   Total size:  ${formatBytes(totalBytes)}`);
+console.log(`   Dossier:     ${formatBytes(dossierSize)} (limit: ${formatBytes(DOSSIER_MAX_SIZE)})`);
 console.log('✅ Build complete');
