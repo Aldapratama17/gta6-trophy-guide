@@ -1,7 +1,6 @@
-// A tiny static server for app/ (Node 22, standard library only), so the guide can be run locally without a
-// build step: `node serve.ts` serves app/ on http://localhost:8080 (`--port <n>` for another port). It sends the MIME
-// types a browser needs, refuses any path outside app/, and otherwise does nothing clever: this is a development
-// convenience, not a web server for the internet.
+// Minimal static server for app/ (Node 22+ stdlib only).
+// Usage: `node serve.ts` serves app/ on http://localhost:8080 (or `--port <n>`).
+// Sends correct MIME types, blocks paths outside app/. Dev convenience only.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -29,36 +28,23 @@ const MIME: Record<string, string> = {
   '.webmanifest': 'application/manifest+json',
 };
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
+createServer((req, res) => {
+  const url = new URL(req.url ?? '/', 'http://localhost');
   let pathname: string;
-  try {
-    pathname = decodeURIComponent(url.pathname);
-  } catch {
-    response.writeHead(400).end('bad request');
-    return;
-  }
+  try { pathname = decodeURIComponent(url.pathname); }
+  catch { res.writeHead(400).end('bad request'); return; }
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    response.writeHead(403).end('forbidden');
-    return;
-  }
+  if (file !== root && !file.startsWith(root + sep)) { res.writeHead(403).end('forbidden'); return; }
   let size: number;
-  try {
-    const stats = statSync(file);
-    if (!stats.isFile()) throw new Error('not a file');
-    size = stats.size;
-  } catch {
-    response.writeHead(404).end('not found');
-    return;
-  }
-  response.writeHead(200, {
+  try { const st = statSync(file); if (!st.isFile()) throw 0; size = st.size; }
+  catch { res.writeHead(404).end('not found'); return; }
+  res.writeHead(200, {
     'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
     'content-length': size,
     'cache-control': 'no-store',
   });
-  createReadStream(file).pipe(response);
+  createReadStream(file).pipe(res);
 }).listen(port, '127.0.0.1', () => {
   console.log(`app/ is on http://localhost:${port}`);
 });

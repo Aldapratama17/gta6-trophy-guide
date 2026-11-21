@@ -3,17 +3,14 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 (async () => {
-  // Start the server
-  const server = spawn('node', ['serve.ts'], { cwd: __dirname });
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Start the dev server on port 8811 (where python server is running)
+  const server = spawn('python3', ['-m', 'http.server', '8811'], { cwd: path.join(__dirname, 'app') });
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-  const userDataDir = '/tmp/puppeteer-firefox-profile';
   const browser = await puppeteer.launch({
-    headless: true,
-    product: 'firefox',
-    executablePath: '/root/.cache/puppeteer/firefox/linux-stable_160.0/firefox/firefox',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '-headless'],
-    userDataDir
+    headless: 'new',
+    executablePath: '/root/.cache/puppeteer/chrome/linux-157.0.8103.78/chrome-linux64/chrome',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process', '--no-zygote']
   });
 
   const page = await browser.newPage();
@@ -24,7 +21,7 @@ const { spawn } = require('child_process');
 
   // Screenshot 1: 1-guide-detail.png - checklist with guide open
   console.log('Taking screenshot 1: Guide detail...');
-  await page.goto('http://localhost:8080', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:8811', { waitUntil: 'networkidle0' });
   await sleep(1500);
   
   await page.waitForSelector('.trophy-item');

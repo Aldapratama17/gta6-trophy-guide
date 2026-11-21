@@ -11,17 +11,12 @@ mkdirSync(outputDir, { recursive: true });
 const DOSSIER_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MiB
 
 function getFileSize(filePath: string): number {
-  try {
-    return statSync(filePath).size;
-  } catch {
-    return 0;
-  }
+  try { return statSync(filePath).size; } catch { return 0; }
 }
 
 function listFilesRecursively(dir: string, base = ''): Array<{path: string, size: number}> {
   const results: Array<{path: string, size: number}> = [];
   if (!existsSync(dir)) return results;
-
   for (const entry of readdirSync(dir)) {
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);

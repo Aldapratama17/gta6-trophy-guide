@@ -18,7 +18,7 @@ The app lives entirely in `app/` — plain HTML, CSS, and ES modules. No build s
 - **Spoiler-safe mode** — one click hides unearned story trophies, ideal for a first playthrough.
 - **Roadmap to Platinum** — seven-stage progression (Story → Collectibles → Activities → Completion → 100% Finale) with per-stage progress and inline checkboxes.
 - **Progress persistence** — auto-saves to localStorage; export/import JSON to move progress across devices or browsers.
-- **Keyboard-friendly** — all interactive elements are focusable, labelled, and work with Tab/Enter/Space.
+- **Keyboard-friendly** — all interactive elements are focusable, labelled, and work with Tab/Enter/Space/Arrow keys.
 - **Responsive layout** — sidebar + detail on desktop, stacked on mobile.
 
 ---

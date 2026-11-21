@@ -1,5 +1,5 @@
 /**
- * GTA VI Trophy Guide & Tracker — rewritten from scratch
+ * GTA VI Trophy Guide & Tracker — fully rewritten
  * Offline-only static app, no runtime network fetches
  */
 
@@ -135,7 +135,7 @@ function refreshSidebarStats() {
   sidebarStats.textContent = `${got} / ${vis.length} shown`;
 }
 
-/* ── List rendering ── */
+/* ── Utility helpers ── */
 function gradeClass(g) {
   return `grade-${g}`;
 }
@@ -146,83 +146,70 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function gradeLabel(g) {
+  return g[0].toUpperCase() + g.slice(1);
+}
+
+/* ── List rendering ── */
 function renderTrophyList() {
   const arr = visibleTrophies();
   trophyList.innerHTML = '';
+
+  if (arr.length === 0) {
+    trophyList.classList.add('empty');
+    refreshSidebarStats();
+    return;
+  }
+
+  trophyList.classList.remove('empty');
+
   for (const t of arr) {
     const li = document.createElement('li');
     li.className = `trophy-item ${gradeClass(t.grade)} ${earned.has(t.name) ? 'earned' : ''} ${t.missable ? 'missable' : ''}`;
     li.dataset.name = t.name;
     li.setAttribute('role', 'option');
-    li.setAttribute('aria-selected', selected?.name === t.name ? 'true' : 'false');
-    li.tabIndex = 0;
+    li.setAttribute('tabindex', '0');
     li.innerHTML = `
-      <span class="trophy-grade">${t.grade[0].toUpperCase()}</span>
-      <span class="trophy-name">${escapeHtml(t.name)}${t.missable ? ' <span class="missable-badge" aria-label="Missable">⚠</span>' : ''}</span>
-      <input type="checkbox" class="trophy-check" ${earned.has(t.name) ? 'checked' : ''} aria-label="Mark ${escapeHtml(t.name)} as earned">
+      <span class="trophy-grade ${gradeClass(t.grade)}">${gradeLabel(t.grade)}</span>
+      <span class="trophy-name">${escapeHtml(t.name)}</span>
+      ${t.missable ? '<span class="trophy-missable">⚠</span>' : ''}
     `;
-    li.addEventListener('click', e => {
-      if (e.target.type === 'checkbox') return;
-      selectTrophy(t);
-    });
-    li.querySelector('.trophy-check').addEventListener('change', e => {
-      toggleEarned(t.name, e.target.checked);
+    li.addEventListener('click', () => selectTrophy(t));
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTrophy(t); }
     });
     trophyList.appendChild(li);
   }
-  refreshSidebarStats();
-  if (!selected || !arr.includes(selected)) {
-    const first = arr[0];
-    if (first) selectTrophy(first);
-    else { detailPlaceholder.hidden = false; detailContent.hidden = true; selected = null; }
-  }
-}
 
-/* ── Keyboard navigation for list ── */
-function setupListKeyboardNav() {
-  trophyList.addEventListener('keydown', e => {
-    const items = [...trophyList.querySelectorAll('.trophy-item')];
-    if (!items.length) return;
-    const idx = items.findIndex(li => li.dataset.name === selected?.name);
-    let next = idx;
-    if (e.key === 'ArrowDown') next = Math.min(idx + 1, items.length - 1);
-    else if (e.key === 'ArrowUp') next = Math.max(idx - 1, 0);
-    else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = items.length - 1;
-    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTrophy(items[idx]?.dataset.name ? trophies.find(t => t.name === items[idx].dataset.name) : null); return; }
-    else return;
-    e.preventDefault();
-    if (next >= 0 && next < items.length) {
-      const t = trophies.find(t => t.name === items[next].dataset.name);
-      if (t) selectTrophy(t);
-      items[next].focus();
-    }
-  });
+  refreshSidebarStats();
 }
 
 /* ── Detail panel ── */
 function selectTrophy(t) {
   selected = t;
-  document.querySelectorAll('.trophy-item').forEach(li => {
-    li.setAttribute('aria-selected', li.dataset.name === t.name);
-  });
   detailPlaceholder.hidden = true;
   detailContent.hidden = false;
-  detGrade.textContent = t.grade[0].toUpperCase();
+
   detGrade.className = `detail-grade ${gradeClass(t.grade)}`;
+  detGrade.textContent = gradeLabel(t.grade);
   detName.textContent = t.name;
   detDesc.textContent = t.description;
-  detGuide.innerHTML = t.guide;
+  detGuide.textContent = t.guide;
+
+  const earnedNow = earned.has(t.name);
+  detEarned.checked = earnedNow;
+  detEarned.setAttribute('aria-label', earnedNow ? 'Unmark as earned' : 'Mark as earned');
+
   detMeta.innerHTML = `
-    <dt>Kind</dt><dd>${t.kind[0].toUpperCase() + t.kind.slice(1)}</dd>
-    <dt>Grade</dt><dd>${t.grade[0].toUpperCase() + t.grade.slice(1)}</dd>
+    <dt>Kind</dt><dd>${gradeLabel(t.kind)}</dd>
+    <dt>Grade</dt><dd>${gradeLabel(t.grade)}</dd>
     <dt>Missable</dt><dd>${t.missable ? 'Yes ⚠' : 'No'}</dd>
+    <dt>Roadmap Stage</dt><dd>${escapeHtml(t.roadmap_stage)}</dd>
     <dt>Source</dt><dd><a href="${t.source_url}" target="_blank" rel="noopener">PSNProfiles</a></dd>
-    <dt>Roadmap Stage</dt><dd>${t.roadmap_stage}</dd>
   `;
-  detEarned.checked = earned.has(t.name);
 }
 
+/* ── Earned toggle ── */
 function toggleEarned(name, on) {
   if (on) earned.add(name); else earned.delete(name);
   saveProgress();
@@ -272,7 +259,7 @@ function renderRoadmap() {
                 <div class="stage-trophy-info">
                   <div class="stage-trophy-name">${escapeHtml(t.name)}${t.missable ? ' ⚠' : ''}</div>
                 </div>
-                <span class="stage-trophy-grade ${gradeClass(t.grade)}">${t.grade}</span>
+                <span class="stage-trophy-grade ${gradeClass(t.grade)}">${gradeLabel(t.grade)}</span>
               </div>
             `;
           }).join('')}
@@ -332,6 +319,30 @@ function toggleView() {
     btnRoadmap.textContent = 'Roadmap';
     btnRoadmap.setAttribute('aria-label', 'Show roadmap view');
   }
+}
+
+/* ── Keyboard navigation for list ── */
+function setupListKeyboardNav() {
+  trophyList.addEventListener('keydown', e => {
+    const items = [...trophyList.querySelectorAll('.trophy-item:not(.hidden)')];
+    if (items.length === 0) return;
+    const idx = items.findIndex(li => li === document.activeElement);
+    if (idx === -1) return;
+
+    let nextIdx = idx;
+    if (e.key === 'ArrowDown') nextIdx = Math.min(idx + 1, items.length - 1);
+    else if (e.key === 'ArrowUp') nextIdx = Math.max(idx - 1, 0);
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = items.length - 1;
+    else return;
+
+    e.preventDefault();
+    items[nextIdx].focus();
+    if (items[nextIdx].dataset.name) {
+      const t = trophies.find(x => x.name === items[nextIdx].dataset.name);
+      if (t) selectTrophy(t);
+    }
+  });
 }
 
 /* ── Initialization ── */
