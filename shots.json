@@ -1,6 +1,6 @@
 [
-  { "file": "1-guide-detail.png", "path": "/", "viewport": { "width": 1280, "height": 800 } },
-  { "file": "2-checklist.png", "path": "/", "viewport": { "width": 1280, "height": 800 } },
-  { "file": "3-roadmap.png", "path": "/", "viewport": { "width": 1280, "height": 800 } },
-  { "file": "4-spoiler-mode.png", "path": "/", "viewport": { "width": 1280, "height": 800 } }
+  { "file": "1-guide-detail.png", "path": "/", "viewport": { "width": 1280, "height": 800 }, "caption": "Guide detail page showing GTA 6 mission walkthrough with interactive map" },
+  { "file": "2-checklist.png", "path": "/", "viewport": { "width": 1280, "height": 800 }, "caption": "Mission checklist tracker with progress bars and collectible counters" },
+  { "file": "3-roadmap.png", "path": "/", "viewport": { "width": 1280, "height": 800 }, "caption": "Content roadmap timeline displaying upcoming DLC releases and updates" },
+  { "file": "4-spoiler-mode.png", "path": "/", "viewport": { "width": 1280, "height": 800 }, "caption": "Spoiler-safe mode toggling story content visibility on demand" }
 ]

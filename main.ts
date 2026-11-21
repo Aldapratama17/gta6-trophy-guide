@@ -9,6 +9,7 @@ const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 mkdirSync(outputDir, { recursive: true });
 
 const DOSSIER_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MiB
+const MIN_SHOT_SIZE = 20 * 1024; // 20 KiB minimum screenshot size
 
 function getFileSize(filePath: string): number {
   try { return statSync(filePath).size; } catch { return 0; }
@@ -84,6 +85,16 @@ if (dossierSize > DOSSIER_MAX_SIZE) {
   process.exit(1);
 }
 
+// Screenshot size guard
+if (existsSync(shotsSrc)) {
+  const shotFiles = listFilesRecursively(shotsSrc);
+  for (const f of shotFiles) {
+    if (f.size < MIN_SHOT_SIZE) {
+      console.warn(`⚠️  Warning: ${f.path} is only ${formatBytes(f.size)} (below ${formatBytes(MIN_SHOT_SIZE)} minimum)`);
+    }
+  }
+}
+
 // Summary
 const totalFiles = appResult.count + shotsResult.count + 1; // +1 for dossier.json
 const totalBytes = appResult.totalBytes + shotsResult.totalBytes + dossierSize;
@@ -92,4 +103,5 @@ console.log('📊 Build Summary:');
 console.log(`   Total files: ${totalFiles}`);
 console.log(`   Total size:  ${formatBytes(totalBytes)}`);
 console.log(`   Dossier:     ${formatBytes(dossierSize)} (limit: ${formatBytes(DOSSIER_MAX_SIZE)})`);
+console.log(`   Screenshots: ${shotsResult.count} files, ${formatBytes(shotsResult.totalBytes)}`);
 console.log('✅ Build complete');
